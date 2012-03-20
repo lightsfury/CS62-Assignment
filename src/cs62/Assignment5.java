@@ -9,6 +9,7 @@ package cs62;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Vector;
 
 import javax.swing.*;
 
@@ -70,6 +71,7 @@ class Room extends JTextArea
 		System.out.println(String.format("Creating Room object %d", room));
 		this.smoking = smoking;
 		this.roomIndex = room;
+		info = new ReservationInfo();
 		UpdateText();
 	}
 	
@@ -83,7 +85,7 @@ class Room extends JTextArea
 		return available;
 	}
 	
-	public boolean bookRoom()
+	public boolean bookRoom(String name, String phone, int partySize)
 	{
 		if (!available)
 		{
@@ -91,19 +93,23 @@ class Room extends JTextArea
 		}
 		else
 		{
-			UpdateText();
+			info.name = name;
+			info.phoneNumber = phone;
+			info.partySize = partySize;
 			available = false;
+			UpdateText();
 			return true;
 		}
 	}
 
 	private void UpdateText()
 	{
+		setEditable(false);
 		// Update the text message and background color
 		String text;
 		if (!available)
 		{
-			text = String.format("Room %d\n%s %s\n%s", roomIndex + 1, info.name, info.phoneNumber, smoking ? "Smoking" : "Non-Smoking");
+			text = String.format("Room %d\n%s(%s) Party size: %d\n%s", roomIndex + 1, info.name, info.phoneNumber, info.partySize, smoking ? "Smoking" : "Non-Smoking");
 			setBackground(Color.RED);
 		}
 		else
@@ -185,12 +191,13 @@ class Reservations extends JFrame implements ActionListener
 		phoneField = new JTextField(12);
 		
 		// Create a *party* box
-		partyBox = new JComboBox();
-		
+		Vector<String> items = new Vector<String>();
 		for (int i = 8; i <= 20; i++)
 		{
-			partyBox.add(new JLabel(String.valueOf(i)));
+			items.add(String.valueOf(i));
 		}
+		
+		partyBox = new JComboBox(items);
 		
 		// Create the radio buttons
 		hiddenRadio = new JRadioButton("");
@@ -227,10 +234,6 @@ class Reservations extends JFrame implements ActionListener
 		
 		submitPanel.add(submitButton);
 		
-		//gridPanel.setVisible(true);
-		//infoPanel.setVisible(true);
-		//submitPanel.setVisible(true);
-		
 		add(gridPanel, BorderLayout.NORTH);
 		add(infoPanel, BorderLayout.CENTER);
 		add(submitPanel, BorderLayout.SOUTH);
@@ -242,8 +245,31 @@ class Reservations extends JFrame implements ActionListener
 		System.out.println("Book room clicked");
 		if (gridPanel != null)
 		{
-			System.out.println(String.format("Grid panel bounds: %dx%d", gridPanel.getBounds().height, gridPanel.getBounds().width));
-			System.out.println(String.format("Grid panel # of children: %d", gridPanel.getComponents().length));
+			String name, phone;
+			if ((name = nameField.getText()) == "")
+			{
+				JOptionPane.showMessageDialog(null, "Please enter the client's name");
+				return;
+			}
+			
+			if ((phone = phoneField.getText()) == "")
+			{
+				JOptionPane.showMessageDialog(null, "Please enter the client's phone number");
+				return;
+			}
+			
+			if (hiddenRadio.isSelected())
+			{
+				JOptionPane.showMessageDialog(null, "Please select the client's smoking preference");
+				return;
+			}
+			
+			int partySize = partyBox.getSelectedIndex() + 8;
+			
+			BookRoom(name, phone, smokingRadio.isSelected(), partySize);
+			
+			//System.out.println(String.format("Grid panel bounds: %dx%d", gridPanel.getBounds().height, gridPanel.getBounds().width));
+			//System.out.println(String.format("Grid panel # of children: %d", gridPanel.getComponents().length));
 		}
 		else
 		{
@@ -251,5 +277,17 @@ class Reservations extends JFrame implements ActionListener
 		}
 		// TODO Auto-generated method stub
 		
+	}
+
+	private void BookRoom(String name, String phone, boolean smoking, int partySize)
+	{
+		for (Room r : rooms)
+		{
+			if (r.isAvailable() && r.isSmokingRoom() == smoking)
+			{
+				r.bookRoom(name, phone, partySize);
+				break;
+			}
+		}
 	}
 }
