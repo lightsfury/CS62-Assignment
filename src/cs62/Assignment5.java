@@ -19,33 +19,40 @@ public class Assignment5
 	{
 		int smokingRooms, nonSmokingRooms;
 		
+		// Ask the user for the number of smoking and non-smoking rooms
 		smokingRooms = GetInteger("Please enter the number of smoking rooms:");
-		
 		nonSmokingRooms = GetInteger("Please enter the number of non-smoking rooms:");
 		
-		System.out.println("Creating Reservations object");
+		// Create the reservations frame and object
 		Reservations r = new Reservations(smokingRooms, nonSmokingRooms);
 	}
 
 	private static int GetInteger(String message)
 	{
+		// Forward declarations
 		int ret;
 		String temp;
+		// Infinite loop
 		while (true)
 		{
 			try
 			{
+				// Show the input dialog
 				temp = JOptionPane.showInputDialog(message);
 				
+				// Attempt to parse the integer
 				ret = Integer.parseInt(temp);
 				
 				if (ret <= 0)
 				{
+					// If some non-exception happened, force one
 					throw new NumberFormatException();
 				}
 				
+				// If everything looks okay, return the integer
 				return ret;
 			}
+			// Tell the user not to do bad things
 			catch (NumberFormatException e)
 			{
 				JOptionPane.showMessageDialog(null, "Please enter a valid integer.");
@@ -58,23 +65,26 @@ public class Assignment5
 	}
 }
 
+// Read-only JTextArea serves double duty as a Swing component and data storage
 class Room extends JTextArea
 {
 	private static final long serialVersionUID = 1L;
+	// Data storage
 	boolean smoking;
 	boolean available = true;
 	int roomIndex;
 	ReservationInfo info;
 	
+	// Constructor
 	Room(boolean smoking, int room)
 	{
-		System.out.println(String.format("Creating Room object %d", room));
 		this.smoking = smoking;
 		this.roomIndex = room;
 		info = new ReservationInfo();
 		UpdateText();
 	}
 	
+	// Helper methods
 	public boolean isSmokingRoom()
 	{
 		return smoking;
@@ -102,6 +112,7 @@ class Room extends JTextArea
 		}
 	}
 
+	// Helper magic
 	private void UpdateText()
 	{
 		setEditable(false);
@@ -109,6 +120,7 @@ class Room extends JTextArea
 		String text;
 		if (!available)
 		{
+			// Make a pretty string
 			text = String.format("Room %d\n%s(%s) Party size: %d\n%s", roomIndex + 1, info.name, info.phoneNumber, info.partySize, smoking ? "Smoking" : "Non-Smoking");
 			setBackground(Color.RED);
 		}
@@ -121,6 +133,7 @@ class Room extends JTextArea
 	}
 }
 
+// Data storage class
 class ReservationInfo
 {
 	public String name;
@@ -128,9 +141,11 @@ class ReservationInfo
 	public int partySize;
 }
 
+// The meaty frame object
 class Reservations extends JFrame implements ActionListener
 {
 	private static final long serialVersionUID = 1L;
+	// Data storage
 	private Room[] rooms;
 	private JPanel gridPanel, infoPanel, submitPanel;
 	private JLabel nameLabel, phoneLabel, partyLabel, smokingLabel;
@@ -140,6 +155,7 @@ class Reservations extends JFrame implements ActionListener
 	private ButtonGroup radioGroup;
 	private JButton submitButton;
 	
+	// The constructor
 	Reservations(int smokingRooms, int nonSmokingRooms)
 	{
 		// Initialize the parent type
@@ -153,30 +169,34 @@ class Reservations extends JFrame implements ActionListener
 			rooms[i] = new Room(i < smokingRooms, i);
 		}
 
+		// Create the visual elements
 		init();
 		
+		// Make sure the frame is visible, adjust its size and make sure the program exits when the frame closes
 		setVisible(true);
 		pack();
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 	}
 	
+	// Visual element creation
 	public void init()
 	{
+		// Because the damn thing doesn't play well with a FlowLayout
 		setLayout(new BorderLayout());
 		
-		System.out.println("Creating grid panel");
 		// Initialize the upper grid panel
 		gridPanel = new JPanel(new GridLayout(2, 4, 5, 5));
 		
+		// Allow space between the text areas
 		gridPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 		
 		for (Room room : rooms)
 		{
+			// Make sure everything is sufficiently large and add them to the grid
 			room.setPreferredSize(new Dimension(50, 50));
 			gridPanel.add(room, room.roomIndex);
 		}
 
-		System.out.println("Creating info panel");
 		// Initialize the information input panel
 		infoPanel = new JPanel(new FlowLayout());
 		
@@ -225,7 +245,6 @@ class Reservations extends JFrame implements ActionListener
 		infoPanel.add(smokingRadio);
 		infoPanel.add(nonSmokingRadio);
 
-		System.out.println("Creating submit panel");
 		// Create the submit panel
 		submitPanel = new JPanel();
 		
@@ -242,12 +261,15 @@ class Reservations extends JFrame implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent arg0)
 	{
-		System.out.println("Book room clicked");
+		// Pre-creation sanity
 		if (gridPanel != null)
 		{
+			// Variable declaration
 			String name, phone;
+			// Make sure the fields have values
 			if ((name = nameField.getText()) == "")
 			{
+				// Tell the user if not
 				JOptionPane.showMessageDialog(null, "Please enter the client's name");
 				return;
 			}
@@ -264,30 +286,38 @@ class Reservations extends JFrame implements ActionListener
 				return;
 			}
 			
+			// Calculate the party size
 			int partySize = partyBox.getSelectedIndex() + 8;
 			
-			BookRoom(name, phone, smokingRadio.isSelected(), partySize);
-			
-			//System.out.println(String.format("Grid panel bounds: %dx%d", gridPanel.getBounds().height, gridPanel.getBounds().width));
-			//System.out.println(String.format("Grid panel # of children: %d", gridPanel.getComponents().length));
+			// Place the reservation
+			bookRoom(name, phone, smokingRadio.isSelected(), partySize);
 		}
 		else
 		{
 			System.out.println("Grid panel is null");
 		}
-		// TODO Auto-generated method stub
 		
 	}
 
-	private void BookRoom(String name, String phone, boolean smoking, int partySize)
+	private void bookRoom(String name, String phone, boolean smoking, int partySize)
 	{
+		boolean booked = false;
+		// Iterate over the rooms
 		for (Room r : rooms)
 		{
-			if (r.isAvailable() && r.isSmokingRoom() == smoking)
+			// To find one that is available and meets the client's smoking preference
+			if (r.isAvailable() && (r.isSmokingRoom() == smoking))
 			{
+				// Then book the room
 				r.bookRoom(name, phone, partySize);
+				booked = true;
 				break;
 			}
+		}
+		if (!booked)
+		{
+			// Show a message alerting the user with the Reservations frame as the alert's parent or origin frame
+			JOptionPane.showMessageDialog(this, "Could not find an available room that meet the client's preferences.");
 		}
 	}
 }
