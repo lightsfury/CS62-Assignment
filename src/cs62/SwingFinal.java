@@ -103,6 +103,7 @@ public class SwingFinal extends JFrame
 		table.setRowSelectionAllowed(false);
 		table.setColumnSelectionAllowed(false);
 		table.setAutoCreateRowSorter(true);
+		
 		JScrollPane pane3 = new JScrollPane(table);
 		
 		add(pane3, BorderLayout.CENTER);
@@ -456,8 +457,20 @@ class EditButton extends JButton implements ActionListener
 	private Frame parentFrame;
 }
 
+class EditButtonCellEditor extends DefaultCellEditor
+{
+	private static final long serialVersionUID = 1L;
+
+	public EditButtonCellEditor(JCheckBox checkBox)
+	{
+		super(checkBox);
+		// TODO Auto-generated constructor stub
+	}
+	
+}
+
 // Stores an in-memory copy of the item information and exposes it to the JTable
-class DataStorage extends AbstractTableModel
+class DataStorage extends AbstractTableModel implements TableCellRenderer
 {
     private static final long serialVersionUID = 1L;
     
@@ -580,6 +593,39 @@ class DataStorage extends AbstractTableModel
 		}
 		
 		System.out.println(editButtons.size());
+	}
+	
+	@Override
+	public Component getTableCellRendererComponent(JTable table, Object value,
+			boolean isSelected, boolean hasFocus, int rowIndex, int columnIndex)
+	{
+		String text = (String)(value);
+		EditButton button = (EditButton)(value);
+		
+		if (text != null)
+		{
+			return new JLabel(text);
+		}
+		else if (button != null)
+		{
+			button.setIndex(rowIndex);
+			return button;
+		}
+		else
+		{
+			switch (columnIndex)
+			{
+			case 0:
+			case 1:
+			case 2:
+			default:
+				return new JLabel(value.toString());
+			case 3:
+				button = new EditButton(parentFrame);
+				button.setIndex(rowIndex);
+				return button;
+			}
+		}
 	}
 	
 	private Vector<DataEntry> data;
