@@ -5,7 +5,7 @@
  * @purpose Assess students' ability to follow a basic application request without assistance.
  */
 
-package cs62;
+package cs62.rbeam;
 
 import java.awt.FlowLayout;
 import java.awt.event.KeyEvent;

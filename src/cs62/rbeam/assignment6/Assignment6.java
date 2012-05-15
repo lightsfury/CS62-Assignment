@@ -5,7 +5,7 @@
  * @purpose Enter and dial a telephone number
  */
 
-package cs62;
+package cs62.rbeam.assignment6;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;

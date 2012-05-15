@@ -5,7 +5,7 @@
  * @purpose Automate the creation of a bibliography with proper formatting
  */
 
-package cs62;
+package cs62.rbeam.assignment7;
 
 import java.awt.*;
 import java.awt.event.*;

@@ -5,7 +5,7 @@
  * @purpose Reserve a conference or party room
  */
 
-package cs62;
+package cs62.rbeam.assignment5;
 
 import java.awt.*;
 import java.awt.event.*;

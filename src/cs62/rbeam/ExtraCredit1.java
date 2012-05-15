@@ -5,7 +5,7 @@
  * @purpose Assess students' ability to follow textual instructions.
  */
 
-package cs62;
+package cs62.rbeam;
 
 import java.awt.HeadlessException;
 import javax.swing.JOptionPane;

@@ -6,7 +6,7 @@
  */
 
 
-package cs62;
+package cs62.rbeam.assignment4;
 
 import java.awt.HeadlessException;
 import java.security.InvalidParameterException;

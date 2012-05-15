@@ -1,4 +1,4 @@
-package cs62;
+package cs62.rbeam;
 
 public class Experiment1
 {

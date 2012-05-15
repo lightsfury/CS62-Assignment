@@ -1,4 +1,4 @@
-package cs62;
+package cs62.rbeam;
 
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;

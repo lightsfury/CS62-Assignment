@@ -1,4 +1,4 @@
-package cs62;
+package cs62.rbeam;
 
 // Example from http://www.crionics.com/products/opensource/faq/swing_ex/SwingExamples.html
 

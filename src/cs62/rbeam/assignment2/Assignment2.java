@@ -5,9 +5,9 @@
  * @purpose Further introduction to the basics of Java programming.
  */
 
-package cs62;
+package cs62.rbeam.assignment2;
 
-public class Assignment1Part2 {
+public class Assignment2 {
 	public static void main(String[] args) {
 		// Print the address message.
 		System.out.println("Robert Beam");

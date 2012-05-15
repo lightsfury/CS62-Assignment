@@ -5,7 +5,7 @@
  * @purpose Introduce the Swing dialog components of Java.
  */
 
-package cs62;
+package cs62.rbeam.assignment3;
 
 import javax.swing.*;
 

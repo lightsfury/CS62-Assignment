@@ -5,7 +5,7 @@
  * @purpose Introduce the students to the basics of Java programming.
  */
 
-package cs62;
+package cs62.rbeam.assignment1;
 
 import java.text.*;
 import java.util.*;
