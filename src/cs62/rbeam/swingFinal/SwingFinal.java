@@ -2,11 +2,10 @@ package cs62.rbeam.swingFinal;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
-import cs62.rbeam.swingFinal.NewItemDialog.SubmitListener;
+import cs62.rbeam.swingFinal.DataInterface.DataEntry;
 
 public class SwingFinal extends JFrame
 {
@@ -34,11 +33,18 @@ public class SwingFinal extends JFrame
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		data = new DataInterface();
+		
 		init();
 		
 		setSize(800, 600);
 		setVisible(true);
 		
+		startLoad();
+	}
+	
+	private void startLoad()
+	{
 		int loadOption;
 		LoadOptions[] loadOptions = new LoadOptions[] {
 				new LoadOptions(LoadOptions.Values.Empty, "Create new data set"),
@@ -111,7 +117,7 @@ public class SwingFinal extends JFrame
 		
 		// The NE pane
 		pane2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		textField = new FadeField(20);
+		textField = new TextFieldWithPlaceholder("Filter", 20);
 		textField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
@@ -120,14 +126,15 @@ public class SwingFinal extends JFrame
 			}
 		});
 		pane2.add(textField);
-		filterField = (FadeField)(textField);
+		filterField = (TextFieldWithPlaceholder)(textField);
 		
 		button = new JButton("Reset filter");
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				SwingFinal.this.filterField.clearText();
+				SwingFinal.this.filterField.showPlaceholderText();
+				SwingFinal.this.onFilterAction();
 			}
 		});
 		pane2.add(button);
@@ -136,15 +143,21 @@ public class SwingFinal extends JFrame
 		
 		add(pane, BorderLayout.NORTH);
 
-		// The table pane with scroll action
-		tableModel = new DefaultTableModel();
-		table = new JTable(tableModel);
+		// Setup the data model
+		dataModel = new InventoryTableModel(data);
+		
+		// Setup the table sorter/filter
+		tableSorter = new TableRowSorter<InventoryTableModel>(dataModel);
+		
+		// Setup the table
+		table = new JTable(dataModel);
 		table.setFillsViewportHeight(true);
 		table.setCellSelectionEnabled(false);
 		table.setRowSelectionAllowed(false);
 		table.setColumnSelectionAllowed(false);
-		table.setAutoCreateRowSorter(true);
+		table.setRowSorter(tableSorter);
 		
+		// Setup the table's scroll panel
 		JScrollPane pane3 = new JScrollPane(table);
 		
 		add(pane3, BorderLayout.CENTER);
@@ -153,133 +166,55 @@ public class SwingFinal extends JFrame
 	protected void onToggleEdit()
     {
 		editEnabled = editToggle.isSelected();
+		table.setCellSelectionEnabled(editEnabled);
     }
 
 	protected void onFilterAction()
     {
 		// Filter the table results
+		String text = filterField.getText();
+		RowFilter<InventoryTableModel, Object> filter = null;
+		
+		try
+		{
+			filter = RowFilter.regexFilter(text, 0);
+			
+			tableSorter.setRowFilter(filter);
+		}
+		catch (Exception e)
+		{
+			JOptionPane.showMessageDialog(this, "The filter text appears to be contain an error. Please check the syntax.", "Error", JOptionPane.ERROR_MESSAGE);
+		}
     }
 
 	protected void onNewItem()
     {
+		DataEntry entry = new DataEntry();
+		data.addRow(entry);
+		
+		
+		/*
 		// Show the add/edit item dialog
-		NewItemDialog dialog = new NewItemDialog(this);
+		ItemEditDialog dialog = new ItemEditDialog(this);
 		
 		// Add a submit listener to know when the user is done
-		dialog.addSubmitListener(new NewItemDialog.SubmitListener() {
-			@Override
-			public void dialogSubmit(DataEntry entry)
-			{
-				SwingFinal.this.dataStorage.addRowData(entry);
-			}
-		});
-		
-		// And show the dialog for new items
-		dialog.showNew();
-    }
-	
-	private JCheckBox editToggle;
-	private boolean editEnabled = false;
-	private FadeField filterField;
-	private TableModel tableModel;
-	private JTable table;
-	
-	static private Object[] columnNames = {
-		"ID #", "Quantity", "Name", "Description"
-	};
-}
-
-//! @todo Replace with an interface to link a JFrame to a modal dialog
-// Extends JButton to easily show an ItemDialog
-class EditButton extends JButton implements ActionListener
-{
-    private static final long serialVersionUID = 1L;
-
-	public EditButton(Frame parent)
-	{
-		super("Edit");
-		parentFrame = parent;
-	}
-
-	public void setIndex(int rowIndex)
-    {
-		currentRowIndex = rowIndex;
-    }
-
-	@Override
-    public void actionPerformed(ActionEvent e)
-    {
-		NewItemDialog dialog = new NewItemDialog(parentFrame);
-		
 		dialog.addSubmitListener(new SubmitListener() {
 			@Override
 			public void dialogSubmit(DataEntry entry)
 			{
-				EditButton.this.dataStorage.updateRowData(currentRowIndex, entry);
+				SwingFinal.this.data.addRow(entry);
 			}
 		});
 		
-		dialog.showEdit(dataStorage.getRowData(currentRowIndex));
+		// And show the dialog for new items
+		dialog.showNew(); // */
     }
 	
-	private DataStorage dataStorage;
-	private int currentRowIndex;
-	private Frame parentFrame;
-}
-
-class EditButtonCellEditor extends DefaultCellEditor
-{
-	private static final long serialVersionUID = 1L;
-
-	public EditButtonCellEditor(JCheckBox checkBox)
-	{
-		super(checkBox);
-		
-		button = new JButton();
-		button.setOpaque(true);
-	}
-	
-	public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int coloumn)
-	{
-		if (isSelected)
-		{
-			button.setForeground(table.getSelectionForeground());
-			button.setBackground(table.getSelectionBackground());
-		}
-		else
-		{
-            button.setForeground(table.getForeground());
-            button.setBackground(table.getBackground());
-		}
-		label = (value == null) ? "" : value.toString();
-		button.setText(label);
-		active = true;
-		return button;
-	}
-	
-	public Object getCellEditorValue()
-	{
-		if (active)
-		{
-			// fireButtonListeners
-		}
-		
-		active = false;
-		return new String(label);
-	}
-	
-	public boolean stopCellEditing()
-	{
-		active = false;
-		return super.stopCellEditing();
-	}
-	
-	public void fireEditingStopped()
-	{
-		super.fireEditingStopped();
-	}
-	
-	private JButton button;
-	private String label;
-	private boolean active;
+	private JCheckBox editToggle;
+	private boolean editEnabled = false;
+	private TextFieldWithPlaceholder filterField;
+	private InventoryTableModel dataModel;
+	private JTable table;
+	private DataInterface data;
+	private TableRowSorter<InventoryTableModel> tableSorter;
 }
