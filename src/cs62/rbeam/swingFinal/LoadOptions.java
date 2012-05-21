@@ -6,7 +6,6 @@ class LoadOptions
 	{
 		Empty,
 		File,
-		Database,
 	}
 	
 	public LoadOptions(Values value, String label)

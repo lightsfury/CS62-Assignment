@@ -2,9 +2,9 @@ package cs62.rbeam.swingFinal;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import javax.swing.*;
 import javax.swing.table.*;
-
 import cs62.rbeam.swingFinal.DataInterface.DataEntry;
 
 public class SwingFinal extends JFrame
@@ -35,9 +35,10 @@ public class SwingFinal extends JFrame
 		
 		data = new DataInterface();
 		
+		setSize(800, 600);
+		
 		init();
 		
-		setSize(800, 600);
 		setVisible(true);
 		
 		startLoad();
@@ -49,7 +50,6 @@ public class SwingFinal extends JFrame
 		LoadOptions[] loadOptions = new LoadOptions[] {
 				new LoadOptions(LoadOptions.Values.Empty, "Create new data set"),
 				new LoadOptions(LoadOptions.Values.File, "Load from file"),
-				new LoadOptions(LoadOptions.Values.Database, "Load from database"),
 		};
 		
 		loadOption = JOptionPane.showOptionDialog(this, "Welcome to Inventory Management\nPlease choose a load option:", "Inventory Management",
@@ -63,21 +63,49 @@ public class SwingFinal extends JFrame
 		case File:
 			loadFromFile();
 			break;
-		case Database:
-			loadFromDatabase();
-			break;
 		}
 	}
 
-	private void loadFromDatabase()
-    {
-		JOptionPane.showMessageDialog(this, "Loading from a database is not supported yet.");
-    }
-
 	private void loadFromFile()
     {
-		//! @todo
+		// Create and show a file chooser dialog
+		JFileChooser chooser = new JFileChooser();
+		if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
+		{
+    		// Get the absolute path to the file
+    		String path = chooser.getSelectedFile().getAbsolutePath();
+    		
+    		// Have the data interface load the data
+    		try
+            {
+	            data.loadFromFile(path);
+            }
+            catch (Exception e)
+            {
+            	JOptionPane.showMessageDialog(this, String.format("Could not load the data: %s.", e.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+	            e.printStackTrace();
+            }
+		}
     }
+	
+	private void saveToFile()
+	{
+		JFileChooser chooser = new JFileChooser();
+		if (chooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
+		{
+			String path = chooser.getSelectedFile().getAbsolutePath();
+			
+			try
+            {
+	            data.saveToFile(path);
+            }
+            catch (Exception e)
+            {
+            	JOptionPane.showMessageDialog(this, String.format("Could not save the data: %s.", e.getMessage()), "Error", JOptionPane.ERROR_MESSAGE);
+	            e.printStackTrace();
+            }
+		}
+	}
 
 	private void init()
     {
@@ -86,8 +114,6 @@ public class SwingFinal extends JFrame
 		// Pre-declare throw away variables
 		JPanel pane, pane2;
 		JButton button;
-		JCheckBox toggle;
-		JTextField textField;
 		
 		// The northern pane
 		pane = new JPanel(new BorderLayout(10, 10));
@@ -103,30 +129,19 @@ public class SwingFinal extends JFrame
 			}
 		});
 		pane2.add(button);
-		toggle = new JCheckBox("Edit data", false);
-		toggle.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				SwingFinal.this.onToggleEdit();
-			}
-		});
-		editToggle = toggle;
-		pane2.add(toggle);
 		pane.add(pane2, BorderLayout.WEST);
 		
 		// The NE pane
 		pane2 = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		textField = new TextFieldWithPlaceholder("Filter", 20);
-		textField.addActionListener(new ActionListener() {
+		filterField = new TextFieldWithPlaceholder("Filter", 20);
+		filterField.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
 				SwingFinal.this.onFilterAction();
 			}
 		});
-		pane2.add(textField);
-		filterField = (TextFieldWithPlaceholder)(textField);
+		pane2.add(filterField);
 		
 		button = new JButton("Reset filter");
 		button.addActionListener(new ActionListener() {
@@ -157,17 +172,79 @@ public class SwingFinal extends JFrame
 		table.setColumnSelectionAllowed(false);
 		table.setRowSorter(tableSorter);
 		
+		TableEditorInterface editInterface = new TableEditorInterface(new ItemEditDialog(this), data);
+		
+		for (int i = 0; i < table.getColumnCount(); i++)
+		{
+			table.getColumn(table.getColumnName(i)).setCellEditor(editInterface);
+		}
+		
 		// Setup the table's scroll panel
 		JScrollPane pane3 = new JScrollPane(table);
 		
 		add(pane3, BorderLayout.CENTER);
+		
+		createMenu();
     }
-
-	protected void onToggleEdit()
-    {
-		editEnabled = editToggle.isSelected();
-		table.setCellSelectionEnabled(editEnabled);
-    }
+	
+	private void createMenu()
+	{
+		JMenuBar menuBar;
+		JMenu menu;
+		JMenuItem menuItem;
+		
+		menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
+		
+		// The File menu
+		menu = new JMenu("File", true);
+		menuBar.add(menu);
+		
+		menuItem = new JMenuItem("Open");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				loadFromFile();
+			}
+		});
+		menu.add(menuItem);
+		
+		menuItem = new JMenuItem("Save");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				saveToFile();
+			}
+		});
+		menu.add(menuItem);
+		
+		menuItem = new JMenuItem("Exit");
+		menuItem.setActionCommand("Exit");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				System.exit(0);
+			}
+		});
+		menu.add(menuItem);
+		
+		// The help menu
+		menu = new JMenu("Help");
+		menuBar.add(menu);
+		
+		menuItem = new JMenuItem("About");
+		menuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				AboutDialog.showModal(SwingFinal.this);
+			}
+		});
+		menu.add(menuItem);
+	}
 
 	protected void onFilterAction()
     {
@@ -177,41 +254,27 @@ public class SwingFinal extends JFrame
 		
 		try
 		{
-			filter = RowFilter.regexFilter(text, 0);
+			filter = RowFilter.regexFilter(text);
 			
 			tableSorter.setRowFilter(filter);
 		}
 		catch (Exception e)
 		{
-			JOptionPane.showMessageDialog(this, "The filter text appears to be contain an error. Please check the syntax.", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "The filter text appears to contain an error. Please check the syntax.", "Error", JOptionPane.ERROR_MESSAGE);
 		}
     }
 
 	protected void onNewItem()
     {
+		// Create a new object and add it to the data list
 		DataEntry entry = new DataEntry();
 		data.addRow(entry);
-		
-		
-		/*
-		// Show the add/edit item dialog
-		ItemEditDialog dialog = new ItemEditDialog(this);
-		
-		// Add a submit listener to know when the user is done
-		dialog.addSubmitListener(new SubmitListener() {
-			@Override
-			public void dialogSubmit(DataEntry entry)
-			{
-				SwingFinal.this.data.addRow(entry);
-			}
-		});
-		
-		// And show the dialog for new items
-		dialog.showNew(); // */
+		// Get its index so we can edit the correct one
+		int row = data.findRow(entry);
+		// Ask the table to edit the new row
+		table.editCellAt(row, 0);
     }
 	
-	private JCheckBox editToggle;
-	private boolean editEnabled = false;
 	private TextFieldWithPlaceholder filterField;
 	private InventoryTableModel dataModel;
 	private JTable table;

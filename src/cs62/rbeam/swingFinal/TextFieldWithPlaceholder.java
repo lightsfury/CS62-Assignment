@@ -11,6 +11,7 @@ class TextFieldWithPlaceholder extends JTextField implements FocusListener
 {
 	private static final long serialVersionUID = 1L;
  
+	// Constructors
 	public TextFieldWithPlaceholder()
 	{
 		super();
@@ -28,13 +29,17 @@ class TextFieldWithPlaceholder extends JTextField implements FocusListener
 	public TextFieldWithPlaceholder(String placeholder)
 	{
 		super();
+
 		setPlaceholderText(placeholder);
+		init();
 	}
 	
 	public TextFieldWithPlaceholder(String placeholder, int cols)
 	{
 		super(cols);
+
 		setPlaceholderText(placeholder);
+		init();
 	}
 
 	@Override
